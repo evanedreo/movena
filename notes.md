@@ -107,3 +107,14 @@ cara isloading itu, prtm,           {isLoading ? (
           ) : (
 
             isloading, trs kt check ada errormessage ga, trs lanjut display
+
+
+if release_date exist, if not "N/A"
+{release_date ? release_date.split("-")[0] : "N/A"}
+
+input debouncing, used to delay the request until the users has stopped typing to reduce the api calls
+
+use hook (npm i react-hook)
+
+useDebounce(()=>setDebouncedSearchTerm(searchTerm), 500,[searchTerm]) 
+every 500 ms

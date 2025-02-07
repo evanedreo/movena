@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Search from "./components/Search";
+import Spinner from "./components/Spinner";
+import MovieCard from "./components/MovieCard";
+import { useDebounce } from "react-use";
 
 const API_BASE_URL = "https://api.themoviedb.org/3";
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
@@ -18,13 +21,19 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [movieList, setMovieList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  useDebounce(()=>setDebouncedSearchTerm(searchTerm), 500,[searchTerm])
 
   //if fetch something, good to use try and catch so we have safety net
-  const fetchMovies = async () => {
+  const fetchMovies = async (query='') => {
     setIsLoading(true);
     setErrorMessage("");
     try {
-      const endpoint = `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
+      const endpoint = query 
+      // encodeURIComponent is to make sure the UTF* encoding
+      ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
+      :`${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
 
       const response = await fetch(endpoint, API_OPTIONS);
 
@@ -50,8 +59,10 @@ const App = () => {
   };
 
   useEffect(() => {
-    fetchMovies();
-  }, []);
+    fetchMovies(debouncedSearchTerm);
+  }, [debouncedSearchTerm]);
+
+  // whenever it changes, this function will be recalled and fetch movies will be updated
 
   return (
     <main>
@@ -66,13 +77,12 @@ const App = () => {
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </header>
         <section className="all-movies">
-          <h2>ALl Movies</h2>
+          <h2 className="mt-[40px]">ALl Movies</h2>
 
           {/* open up a ternary operator */}
-          {/* ? itu if isLoading */}
-          {/*  : itu lanjutan, if errorMessage */}
+          {/* ? itu if isLoading */}          {/*  : itu lanjutan, if errorMessage */}
           {isLoading ? (
-            <p className="text-white">Loading...</p>
+            <Spinner/>
           ) :errorMessage? (
             <p className="text-red-500">{errorMessage}</p>
           ) : (
@@ -83,7 +93,8 @@ const App = () => {
               {/* whenever we map over a list of elements, dont forget to provide a key to the list of elements that we are mapping over */}
               {/* key must be unique and it is usually an id, because react might be confused of some elements together */}
               {movieList.map((movie)=>(
-                  <p key={movie.id} className="text-white">{movie.title}</p>
+                  // <p key={movie.id} className="text-white">{movie.title}</p>
+                  <MovieCard key={movie.id} movie={movie} />
               ))}
             </ul>
           )
